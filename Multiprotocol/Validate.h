@@ -276,7 +276,6 @@
 	#undef	FRSKY_RX_CC2500_INO
 	#undef	HITEC_CC2500_INO
 	#undef	HOTT_CC2500_INO
-	#undef	OMP_CC2500_INO			//CC2500 for control and NRF for telemetry
 	#undef	REDPINE_CC2500_INO
 	#undef	RLINK_CC2500_INO
 	#undef	SCANNER_CC2500_INO
@@ -293,6 +292,7 @@
 	#undef	CG023_NRF24L01_INO
 	#undef	CX10_NRF24L01_INO
 	#undef	DM002_NRF24L01_INO
+	#undef	E016H_NRF24L01_INO
 	#undef	E01X_NRF24L01_INO
 	#undef	ESKY_NRF24L01_INO
 	#undef	ESKY150_NRF24L01_INO
@@ -306,28 +306,29 @@
 	#undef	JJRC345_NRF24L01_INO
 	#undef	KN_NRF24L01_INO
 	#undef	LOLI_NRF24L01_INO
-	#undef	MJXQ_NRF24L01_INO
-	#undef	MT99XX_NRF24L01_INO
 	#undef	NCC1701_NRF24L01_INO
 	#undef	POTENSIC_NRF24L01_INO
 	#undef	PROPEL_NRF24L01_INO
-	#undef	Q303_NRF24L01_INO
 	#undef	REALACC_NRF24L01_INO
 	#undef	SHENQI_NRF24L01_INO
 	#undef	SYMAX_NRF24L01_INO
 	#undef	TIGER_NRF24L01_INO
 	#undef	V2X2_NRF24L01_INO
 	#undef	V761_NRF24L01_INO
-	#undef	XK_NRF24L01_INO
 	#undef	YD717_NRF24L01_INO
 	#undef	ZSX_NRF24L01_INO
 #endif
 #if not defined(CC2500_INSTALLED) && not defined(NRF24L01_INSTALLED)
 	#undef	GD00X_CCNRF_INO
 	#undef	KF606_CCNRF_INO
+	#undef	MJXQ_CCNRF_INO
+	#undef	MT99XX_CCNRF_INO
+	#undef	OMP_CCNRF_INO
+	#undef	Q303_CCNRF_INO
 	#undef	Q90C_CCNRF_INO
 	#undef	SLT_CCNRF_INO
 	#undef	V911S_CCNRF_INO
+	#undef	XK_CCNRF_INO
 #endif
 #if not defined(STM32_BOARD)
 	#undef SX1276_INSTALLED
@@ -376,6 +377,7 @@
 	#undef DSM_FWD_PGM
 	#undef WFLY2_HUB_TELEMETRY
 	#undef LOLI_HUB_TELEMETRY
+	#undef MT99XX_HUB_TELEMETRY
 	#undef MLINK_HUB_TELEMETRY
 	#undef MLINK_FW_TELEMETRY
 #else
@@ -401,7 +403,7 @@
 	#if not defined(DEVO_CYRF6936_INO)
 		#undef DEVO_HUB_TELEMETRY
 	#endif
-	#if not defined(OMP_CC2500_INO)
+	#if not defined(OMP_CCNRF_INO)
 		#undef OMP_HUB_TELEMETRY
 	#endif
 	#if not defined(PROPEL_NRF24L01_INO)
@@ -454,11 +456,14 @@
 	#if not defined(LOLI_NRF24L01_INO)
 		#undef LOLI_HUB_TELEMETRY
 	#endif
+	#if not defined(MT99XX_CCNRF_INO)
+		#undef MT99XX_HUB_TELEMETRY
+	#endif
 	#if not defined(FRSKYD_CC2500_INO) && not defined(MLINK_HUB_TELEMETRY) && not defined(BAYANG_HUB_TELEMETRY)
 		//protocols using FRSKYD user frames
 		#undef HUB_TELEMETRY 
 	#endif
-	#if not defined(HOTT_FW_TELEMETRY) && not defined(DSM_TELEMETRY) && not defined(SPORT_TELEMETRY) && not defined(HUB_TELEMETRY) && not defined(HUBSAN_HUB_TELEMETRY) && not defined(BUGS_HUB_TELEMETRY) && not defined(NCC1701_HUB_TELEMETRY) && not defined(BAYANG_HUB_TELEMETRY) && not defined(CABELL_HUB_TELEMETRY) && not defined(RLINK_HUB_TELEMETRY) && not defined(AFHDS2A_HUB_TELEMETRY) && not defined(AFHDS2A_FW_TELEMETRY) && not defined(MULTI_TELEMETRY) && not defined(MULTI_STATUS) && not defined(HITEC_HUB_TELEMETRY) && not defined(HITEC_FW_TELEMETRY) && not defined(SCANNER_TELEMETRY) && not defined(FRSKY_RX_TELEMETRY) && not defined(AFHDS2A_RX_TELEMETRY) && not defined(BAYANG_RX_TELEMETRY) && not defined(DEVO_HUB_TELEMETRY) && not defined(PROPEL_HUB_TELEMETRY) && not defined(OMP_HUB_TELEMETRY) && not defined(WFLY2_HUB_TELEMETRY) && not defined(LOLI_HUB_TELEMETRY) && not defined(MLINK_HUB_TELEMETRY) && not defined(MLINK_FW_TELEMETRY)
+	#if not defined(HOTT_FW_TELEMETRY) && not defined(DSM_TELEMETRY) && not defined(SPORT_TELEMETRY) && not defined(HUB_TELEMETRY) && not defined(HUBSAN_HUB_TELEMETRY) && not defined(BUGS_HUB_TELEMETRY) && not defined(NCC1701_HUB_TELEMETRY) && not defined(BAYANG_HUB_TELEMETRY) && not defined(CABELL_HUB_TELEMETRY) && not defined(RLINK_HUB_TELEMETRY) && not defined(AFHDS2A_HUB_TELEMETRY) && not defined(AFHDS2A_FW_TELEMETRY) && not defined(MULTI_TELEMETRY) && not defined(MULTI_STATUS) && not defined(HITEC_HUB_TELEMETRY) && not defined(HITEC_FW_TELEMETRY) && not defined(SCANNER_TELEMETRY) && not defined(FRSKY_RX_TELEMETRY) && not defined(AFHDS2A_RX_TELEMETRY) && not defined(BAYANG_RX_TELEMETRY) && not defined(DEVO_HUB_TELEMETRY) && not defined(PROPEL_HUB_TELEMETRY) && not defined(OMP_HUB_TELEMETRY) && not defined(WFLY2_HUB_TELEMETRY) && not defined(LOLI_HUB_TELEMETRY) && not defined(MLINK_HUB_TELEMETRY) && not defined(MLINK_FW_TELEMETRY) && not defined(MT99XX_HUB_TELEMETRY)
 		#undef TELEMETRY
 		#undef INVERT_TELEMETRY
 		#undef MULTI_TELEMETRY

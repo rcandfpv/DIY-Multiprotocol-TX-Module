@@ -158,6 +158,7 @@ uint8_t CH_EATR[]={ELEVATOR, AILERON, THROTTLE, RUDDER, CH5, CH6, CH7, CH8, CH9,
 // Mode_select variables
 uint8_t mode_select;
 uint8_t protocol_flags=0,protocol_flags2=0,protocol_flags3=0;
+uint8_t option_override;
 
 #ifdef ENABLE_PPM
 // PPM variable
@@ -856,7 +857,7 @@ bool Update_All()
 	#endif
 	#if defined(TELEMETRY)
 		#ifndef MULTI_TELEMETRY
-			if((protocol == PROTO_BAYANG_RX) || (protocol == PROTO_AFHDS2A_RX) || (protocol == PROTO_FRSKY_RX) || (protocol == PROTO_SCANNER) || (protocol==PROTO_FRSKYD) || (protocol==PROTO_BAYANG) || (protocol==PROTO_NCC1701) || (protocol==PROTO_BUGS) || (protocol==PROTO_BUGSMINI) || (protocol==PROTO_HUBSAN) || (protocol==PROTO_AFHDS2A) || (protocol==PROTO_FRSKYX) || (protocol==PROTO_FRSKYX2) || (protocol==PROTO_DSM) || (protocol==PROTO_CABELL) || (protocol==PROTO_HITEC) || (protocol==PROTO_HOTT) || (protocol==PROTO_PROPEL) || (protocol==PROTO_OMP) || (protocol==PROTO_DEVO) || (protocol==PROTO_DSM_RX) || (protocol==PROTO_FRSKY_R9) || (protocol==PROTO_RLINK) || (protocol==PROTO_WFLY2) || (protocol==PROTO_LOLI) || (protocol==PROTO_MLINK))
+			if((protocol == PROTO_BAYANG_RX) || (protocol == PROTO_AFHDS2A_RX) || (protocol == PROTO_FRSKY_RX) || (protocol == PROTO_SCANNER) || (protocol==PROTO_FRSKYD) || (protocol==PROTO_BAYANG) || (protocol==PROTO_NCC1701) || (protocol==PROTO_BUGS) || (protocol==PROTO_BUGSMINI) || (protocol==PROTO_HUBSAN) || (protocol==PROTO_AFHDS2A) || (protocol==PROTO_FRSKYX) || (protocol==PROTO_FRSKYX2) || (protocol==PROTO_DSM) || (protocol==PROTO_CABELL) || (protocol==PROTO_HITEC) || (protocol==PROTO_HOTT) || (protocol==PROTO_PROPEL) || (protocol==PROTO_OMP) || (protocol==PROTO_DEVO) || (protocol==PROTO_DSM_RX) || (protocol==PROTO_FRSKY_R9) || (protocol==PROTO_RLINK) || (protocol==PROTO_WFLY2) || (protocol==PROTO_LOLI) || (protocol==PROTO_MLINK) || (protocol==PROTO_MT99XX))
 		#endif
 				if(IS_DISABLE_TELEM_off)
 					TelemetryUpdate();
@@ -1179,6 +1180,9 @@ static void protocol_init()
 			FAILSAFE_VALUES_off;
 		#endif
 		DATA_BUFFER_LOW_off;
+
+		SUB_PROTO_VALID;
+		option_override = 0xFF;
 		
 		blink=millis();
 
@@ -1187,7 +1191,7 @@ static void protocol_init()
 		#if defined(FRSKYX_CC2500_INO) && defined(EU_MODULE)
 			if( ! ( (protocol == PROTO_FRSKYX || protocol == PROTO_FRSKYX2) && sub_protocol < 2 ) )
 		#endif
-		while(multi_protocols[index].protocol != 0)
+		while(multi_protocols[index].protocol != 0xFF)
 		{
 			if(multi_protocols[index].protocol==protocol)
 			{
@@ -1636,9 +1640,8 @@ void modules_reset()
 			usart2_begin(100000,SERIAL_8E2);
 			USART2_BASE->CR1 |= USART_CR1_PCE_BIT;
 		}
-		usart3_begin(100000,SERIAL_8E2);
-		USART3_BASE->CR1 &= ~ USART_CR1_RE;		//disable receive
 		USART2_BASE->CR1 &= ~ USART_CR1_TE;		//disable transmit
+		usart3_begin(100000,SERIAL_8E2);
 	#else
 		//ATMEGA328p
 		#include <util/setbaud.h>	
@@ -1683,17 +1686,19 @@ void modules_reset()
 		usart_init(USART3);
 		usart_config_gpios_async(USART3,GPIOB,PIN_MAP[PB11].gpio_bit,GPIOB,PIN_MAP[PB10].gpio_bit,config);
 		usart_set_baud_rate(USART3, STM32_PCLK1, baud);
-		usart_enable(USART3);
+		USART3_BASE->CR3 &= ~USART_CR3_EIE & ~USART_CR3_CTSIE;	// Disable receive
+		USART3_BASE->CR1 &= ~USART_CR1_RE & ~USART_CR1_RXNEIE & ~USART_CR1_PEIE & ~USART_CR1_IDLEIE ; // Disable RX and interrupts
+    	USART3_BASE->CR1 |= (USART_CR1_TE | USART_CR1_UE);		// Enable USART3 and TX
 	}
 	void init_HWTimer()
 	{	
-		HWTimer2.pause();									// Pause the timer2 while we're configuring it
-		TIMER2_BASE->PSC = 35;								// 36-1;for 72 MHZ /0.5sec/(35+1)
-		TIMER2_BASE->ARR = 0xFFFF;							// Count until 0xFFFF
-		HWTimer2.setMode(TIMER_CH1, TIMER_OUTPUT_COMPARE);	// Main scheduler
-		TIMER2_BASE->SR = 0x1E5F & ~TIMER_SR_CC2IF;			// Clear Timer2/Comp2 interrupt flag
-		TIMER2_BASE->DIER &= ~TIMER_DIER_CC2IE;				// Disable Timer2/Comp2 interrupt
-		HWTimer2.refresh();									// Refresh the timer's count, prescale, and overflow
+		HWTimer2.pause();										// Pause the timer2 while we're configuring it
+		TIMER2_BASE->PSC = 35;									// 36-1;for 72 MHZ /0.5sec/(35+1)
+		TIMER2_BASE->ARR = 0xFFFF;								// Count until 0xFFFF
+		HWTimer2.setMode(TIMER_CH1, TIMER_OUTPUT_COMPARE);		// Main scheduler
+		TIMER2_BASE->SR = 0x1E5F & ~TIMER_SR_CC2IF;				// Clear Timer2/Comp2 interrupt flag
+		TIMER2_BASE->DIER &= ~TIMER_DIER_CC2IE;					// Disable Timer2/Comp2 interrupt
+		HWTimer2.refresh();										// Refresh the timer's count, prescale, and overflow
 		HWTimer2.resume();
 
 		#ifdef ENABLE_SERIAL
@@ -1787,7 +1792,7 @@ void pollBoot()
 #if defined(TELEMETRY)
 void PPM_Telemetry_serial_init()
 {
-	if( (protocol==PROTO_FRSKYD) || (protocol==PROTO_HUBSAN) || (protocol==PROTO_AFHDS2A) || (protocol==PROTO_BAYANG)|| (protocol==PROTO_NCC1701) || (protocol==PROTO_CABELL)  || (protocol==PROTO_HITEC) || (protocol==PROTO_BUGS) || (protocol==PROTO_BUGSMINI) || (protocol==PROTO_PROPEL) || (protocol==PROTO_OMP) || (protocol==PROTO_RLINK) || (protocol==PROTO_WFLY2)  || (protocol==PROTO_LOLI)
+	if( (protocol==PROTO_FRSKYD) || (protocol==PROTO_HUBSAN) || (protocol==PROTO_AFHDS2A) || (protocol==PROTO_BAYANG)|| (protocol==PROTO_NCC1701) || (protocol==PROTO_CABELL)  || (protocol==PROTO_HITEC) || (protocol==PROTO_BUGS) || (protocol==PROTO_BUGSMINI) || (protocol==PROTO_PROPEL) || (protocol==PROTO_OMP) || (protocol==PROTO_RLINK) || (protocol==PROTO_WFLY2) || (protocol==PROTO_LOLI) || (protocol==PROTO_MT99XX)
 	#ifdef TELEMETRY_FRSKYX_TO_FRSKYD
 		 || (protocol==PROTO_FRSKYX) || (protocol==PROTO_FRSKYX2)
 	#endif
@@ -1826,7 +1831,7 @@ static uint32_t random_id(uint16_t address, uint8_t create_new)
 			}
 			if(id!=0x2AD141A7)	//ID with seed=0
 			{
-				debugln("Read ID from EEPROM");
+				//debugln("Read ID from EEPROM");
 				return id;
 			}
 		}
